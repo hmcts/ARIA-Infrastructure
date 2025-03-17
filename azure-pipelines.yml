@@ -5,10 +5,10 @@ variables:
   - name: user_surname
     value: McDevitt
 
-#trigger:
-#  branches:
-#    include:
-#      - main  
+trigger:
+  branches:
+    include:
+      - main  
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -22,7 +22,7 @@ steps:
       git config --global user.name "$(user_first_name) ($(user_surname)"
 
       echo "Cloning Azure DevOps repository..."
-      git clone https://$(DevOps_PAT)@dev.azure.com/amcdevitt/test_github_sync/_git/test_github_sync azure-repo
+      git clone https://$(DevOps_PAT_GHub_Link)@dev.azure.com/ARIA_Migration-CICD/ARIA/_git/ARIA_Migration-CICD azure-repo
       cd azure-repo
 
       echo "Switching to GitHub sync branch in Azure DevOps..."
@@ -42,14 +42,14 @@ steps:
       cd ..
 
       echo "Cloning GitHub repository to sync from Azure DevOps..."
-      git clone https://$(GitHub_PAT)@github.com/hmcts/ARIAMigration-Databrick.git github-repo
+      git clone https://$(GitHub_PAT)@github.com/hmcts/ARIA-Infrastructure.git github-repo
       cd github-repo
 
       echo "Switching to Azure DevOps sync branch in GitHub..."
       git checkout -B azure-sync
 
       echo "Fetching latest changes from Azure DevOps..."
-      git pull https://$(DevOps_PAT)@dev.azure.com/amcdevitt/test_github_sync/_git/test_github_sync github-sync --allow-unrelated-histories
+      git pull https://$(DevOps_PAT_GHub_Link)@dev.azure.com/ARIA_Migration-CICD/ARIA/_git/ARIA_Migration-CICD github-sync --allow-unrelated-histories
 
       echo "Pushing Azure DevOps changes to GitHub (azure-sync branch)..."
       git push origin azure-sync
