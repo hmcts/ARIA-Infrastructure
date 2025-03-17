@@ -1,0 +1,85 @@
+# Code still TBC as error connecting to databricks job/notebook
+
+#trigger:
+#  branches:
+#    include:
+#      - main
+
+variables:
+  - group: DatabricksSecrets
+  - group: AzureSecrets
+  - name: terraformVersion
+    value: '1.11.2' 
+  - name: terraformDirectory
+    value: '$(System.DefaultWorkingDirectory)/azure-repo/pipelines/sandbox'
+  - name: storageAccountName
+    value: 'ariastorage13901'
+  - name: containerName
+    value: 'sbox'
+  - name: key
+    value: 'sbox/state.tfstate'
+
+stages:
+  - stage: 'SandboxDeployment'
+    displayName: 'Deploy to Sandbox'
+    jobs:
+      - job: 'TerraformApplySandbox'
+        displayName: 'Terraform Apply - Sandbox'
+        steps:
+        
+          - task: AzureCLI@2
+            displayName: 'Login to Azure via Service Principal'
+            inputs:
+              azureSubscription: 'devops_tf'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Successfully authenticated to Azure"
+
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: '$(terraformVersion)'
+          - script: |
+              echo "Terraform version:"
+              terraform --version
+              echo "Working directory: $(terraformDirectory)"
+            displayName: 'Verify Terraform Installation'
+                    
+          - script: |
+              terraform -chdir=azure-repo/pipelines/sandbox init \
+                -backend-config="storage_account_name=$(storageAccountName)" \
+                -backend-config="container_name=$(containerName)" \
+                -backend-config="key=$(key)" \
+                -backend-config="access_key=$(accessKey)"
+            displayName: 'Terraform Init - Sandbox'
+            
+          - script: |
+             cd $(System.DefaultWorkingDirectory)
+             terraform -chdir=azure-repo/pipelines/sandbox validate
+            displayName: 'Terraform Validate - Sandbox'
+
+          - script: |
+             cd $(System.DefaultWorkingDirectory)
+             terraform -chdir=azure-repo/pipelines/sandbox fmt
+            displayName: 'Terraform Format - Sandbox'
+          
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Plan - Sandbox'
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/azure-repo/pipelines/sandbox'
+              environmentServiceNameAzureRM: 'devops_tf' 
+                      
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/tfplan'
+              artifact: 'TerraformPlanSandbox'
+              publishLocation: 'pipeline'
+            displayName: 'Publish Terraform Plan'
+            
+          - script: |
+              cd $(System.DefaultWorkingDirectory)
+              terraform -chdir=azure-repo/pipelines/sandbox apply -auto-approve $(Build.ArtifactStagingDirectory)/tfplan
+            displayName: 'Terraform Apply - Sandbox' 

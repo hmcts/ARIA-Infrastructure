@@ -1,0 +1,134 @@
+variables:
+  - group: DatabricksSecrets
+  - name: shouldBuildWheel
+    value: 'true'
+  - name: mainRepositoryName
+    value: 'azure-repo'
+  - name: pythonVersion
+    value: '3.9'
+  - name: subscriptionEndPoint
+    value: 'test_python_installation' 
+  - name: wheelFile
+    value: "$(Pipeline.Workspace)/ARIAFUNCITONS-0.0.1-py3-none-any.whl"
+  - name: wheelName
+    value: 'ARIAFUNCITONS-0.0.1-py3-none-any.whl'
+  - name: workspacePath
+    value: 'dbfs:/FileStore/test'
+
+stages:
+- stage: Build
+  displayName: 'Build Wheel Package'
+  jobs:
+  - job: BuildWheelPackage
+    displayName: 'Build Python Wheel'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+        addToPath: true
+        architecture: 'x64'
+
+    - script: |
+        python --version
+        pip install --upgrade pip
+        pip install build
+        python -m build --wheel --outdir $(mainRepositoryName)/Databricks/SharedFunctionsLib/dist \
+          $(mainRepositoryName)/Databricks/SharedFunctionsLib
+
+        ls -la $(mainRepositoryName)/Databricks/SharedFunctionsLib/dist
+      displayName: 'Install Python dependencies & build Python wheel'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/azure-repo/Databricks/SharedFunctionsLib/dist'
+        ArtifactName: 'ariafunction'
+        publishLocation: 'Container'
+      displayName: 'Publish Wheel Artifact'
+
+- stage: Deploy
+  displayName: 'Deploy to Databricks'
+  dependsOn: Build
+  jobs:
+  - job: DeployToDatabricks
+    displayName: 'Deploy to Databricks'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DownloadBuildArtifacts@1
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'ariafunction'
+        downloadPath: '$(Pipeline.Workspace)'
+      displayName: 'Download wheel Artifact'
+    
+    - script: |
+        echo "Contents of Artifact Staging Directory:"
+        find '$(Pipeline.Workspace)' -type f | sort
+        echo "-----"
+        find '$(Pipeline.Workspace)' -name "*.whl"
+        echo "-----"
+        ls -la '$(Pipeline.Workspace)'
+      displayName: 'List contents of Artifact Staging Directory'
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+        addToPath: true
+        architecture: 'x64'
+    
+    - script: |
+        pip install databricks-cli --upgrade
+      displayName: 'Install Databricks CLI'
+    
+    - script: |
+        echo "[DEFAULT]" > ~/.databrickscfg
+        echo "host = $(databricksInstance)" >> ~/.databrickscfg
+        echo "token = $(databricksPAT)" >> ~/.databrickscfg
+      displayName: 'Configure Databricks CLI'
+
+    - script: |
+        set -e 
+
+        WHEEL_FILE=$(find '$(Pipeline.Workspace)' -name "*.whl" | head -n 1)
+
+        if [ -n "$WHEEL_FILE" ]; then
+          echo "Found wheel file: $WHEEL_FILE"
+
+          FILENAME=$(basename "$WHEEL_FILE")
+          echo "Extracted filename: $FILENAME"
+  
+          DEST_PATH="dbfs:/Filestore/test/$FILENAME"
+          echo "Destination path: $DEST_PATH"
+
+          echo "copying wheel file to DBFS..."
+          echo "copying $WHEEL_FILE to $DEST_PATH"
+          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
+
+          echo "Listing files in $(workspacePath)/"
+
+          if [ $? -eq 0 ]; then
+            echo "Wheel file uploaded successfully to $(workspacePath)/"
+            exit 0
+          else
+            echo "No wheel files found!"
+            exit 1
+          fi
+        else
+          echo "No wheel file found"
+          exit 1
+        fi
+      displayName: 'Upload Wheel to Databricks DBFS'
+
+    - script: |
+       WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
+       if [ -z "$WHEEL_FILENAME" ]; then
+         echo "Error: No .whl file found in $(Pipeline.Workspace)"
+         exit 1
+       fi
+       echo "Installing wheel: $WHEEL_FILENAME on cluster ID: $(databricksClusterId)"
+       databricks libraries install --cluster-id $(databricksClusterId) --whl "$(workspacePath)/$WHEEL_FILENAME"
+      displayName: 'Install Wheel on Databricks Cluster'
