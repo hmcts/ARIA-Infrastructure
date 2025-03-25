@@ -91,34 +91,36 @@ stages:
       displayName: 'Configure Databricks CLI'
 
     - script: |
-        set -e 
-
+        set -e
         WHEEL_FILE=$(find '$(Pipeline.Workspace)' -name "*.whl" | head -n 1)
-
         if [ -n "$WHEEL_FILE" ]; then
           echo "Found wheel file: $WHEEL_FILE"
-
           FILENAME=$(basename "$WHEEL_FILE")
-          echo "Extracted filename: $FILENAME"
-  
-          DEST_PATH="$(workspacePath)/$FILENAME"  # Using workspace path instead of DBFS
-          echo "Destination path: $DEST_PATH"
-
-          echo "Uploading wheel file to Workspace..."
-          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
-          if [ $? -eq 0 ]; then
-            echo "Wheel file uploaded successfully to $DEST_PATH"
-            exit 0
-          else
-            echo "Failed to upload wheel file!"
-            exit 1
-          fi
+          
+          # Upload wheel to DBFS (allowed for storage)
+          databricks fs cp --overwrite "$WHEEL_FILE" "dbfs:/databricks/libs/$FILENAME"
+          
+          # Create init script
+          echo '#!/bin/bash
+          /databricks/python/bin/pip install /dbfs/databricks/libs/'$FILENAME > install_script.sh
+          
+          # Upload init script
+          databricks fs cp --overwrite install_script.sh "dbfs:/databricks/scripts/install_$FILENAME.sh"
+          
+          # Update cluster configuration
+          databricks clusters edit --json '{
+            "cluster_id": "$(databricksClusterId)",
+            "init_scripts": [{
+              "dbfs": {
+                "destination": "dbfs:/databricks/scripts/install_'$FILENAME'.sh"
+              }
+            }]
+          }'
         else
           echo "No wheel file found"
           exit 1
         fi
-      displayName: 'Upload Wheel to Databricks Workspace'
-
+      displayName: 'Install via Cluster Init Script'
     - script: |
        WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
        if [ -z "$WHEEL_FILENAME" ]; then
