@@ -109,9 +109,8 @@ stages:
           echo "copying $WHEEL_FILE to $DEST_PATH"
           databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
 
-          databricks fs ls $"workspathPath"
-
           echo "Listing files in $(workspacePath)/"
+          databricks fs ls $("workspathPath")
 
           if [ $? -eq 0 ]; then
             echo "Wheel file uploaded successfully to $(workspacePath)/"
