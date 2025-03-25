@@ -1,0 +1,36 @@
+variables:
+  - group: Secrets
+  - name: user_first_name
+    value: Andrew
+  - name: user_surname
+    value: McDevitt
+
+trigger:
+  branches:
+    include:
+      - main  
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  # Clone GitHub Repository
+  - script: |
+      echo "Setting up Git configuration..."
+      git config --global user.email "$(user_first_name).$(user_surname)@HMCTS.NET"
+      git config --global user.name "$(user_first_name) ($(user_surname))"
+
+      echo "Cloning GitHub repository..."
+      git clone https://$(GitHub_PAT)@github.com/hmcts/ARIA-Infrastructure.git github-repo
+      cd github-repo
+
+      echo "Checking out main branch..."
+      git checkout main
+
+      echo "Repository cloned successfully!"
+    displayName: 'Clone GitHub Repository'
+
+  - script: |
+      echo "Listing repository files..."
+      ls -la github-repo
+    displayName: 'Verify Repository Files'
