@@ -13,7 +13,7 @@ variables:
   - name: wheelName
     value: 'ARIAFUNCITONS-0.0.1-py3-none-any.whl'
   - name: workspacePath
-    value: '/Workspace/Shared/wheels'
+    value: 'dbfs:/Workspace/Shared/wheels'
 
 stages:
 - stage: Build
