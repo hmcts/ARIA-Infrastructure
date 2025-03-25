@@ -13,7 +13,7 @@ variables:
   - name: wheelName
     value: 'ARIAFUNCITONS-0.0.1-py3-none-any.whl'
   - name: workspacePath
-    value: 'dbfs:/Workspace/Shared/wheels'
+    value: 'dbfs:/Workspace/shared_wheels/'
 
 stages:
 - stage: Build
@@ -39,6 +39,7 @@ stages:
           $(mainRepositoryName)/Databricks/SharedFunctionsLib
 
         ls -la $(mainRepositoryName)/Databricks/SharedFunctionsLib/dist
+
       displayName: 'Install Python dependencies & build Python wheel'
 
     - task: PublishBuildArtifacts@1
@@ -107,6 +108,8 @@ stages:
           echo "copying wheel file to DBFS..."
           echo "copying $WHEEL_FILE to $DEST_PATH"
           databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
+
+          databricks fs ls $"workspathPath"
 
           echo "Listing files in $(workspacePath)/"
 
