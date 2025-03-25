@@ -105,8 +105,7 @@ stages:
           echo "Destination path: $DEST_PATH"
 
           echo "Uploading wheel file to Workspace..."
-          databricks workspace import --format AUTO --language PYTHON "$WHEEL_FILE" "$DEST_PATH"
-
+          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
           if [ $? -eq 0 ]; then
             echo "Wheel file uploaded successfully to $DEST_PATH"
             exit 0
