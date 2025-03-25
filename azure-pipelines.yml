@@ -130,7 +130,7 @@ stages:
          exit 1
        fi
        echo "Installing wheel: $WHEEL_FILENAME on cluster ID: $(databricksClusterId)"
-       databricks libraries install --cluster-id $(databricksClusterId) --whl "workspace:$(workspacePath)/$WHEEL_FILENAME"
+       databricks libraries install --cluster-id $(databricksClusterId) --whl "$(workspacePath)/$WHEEL_FILENAME"
       displayName: 'Install Wheel on Databricks Cluster'
 
     - script: |
