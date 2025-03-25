@@ -21,8 +21,8 @@ steps:
       git config --global user.name "$(user_first_name) ($(user_surname))"
 
       echo "Cloning GitHub repository..."
-      git clone https://$(GitHub_PAT)@github.com/hmcts/ARIA-Infrastructure.git github-repo
-      cd github-repo
+      git clone https://$(GitHub_PAT)@github.com/hmcts/ARIA-Infrastructure.git DLRM
+      cd DLRM
 
       echo "Checking out main branch..."
       git checkout main
