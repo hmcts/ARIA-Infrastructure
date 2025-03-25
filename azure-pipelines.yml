@@ -13,7 +13,7 @@ variables:
   - name: wheelName
     value: 'ARIAFUNCITONS-0.0.1-py3-none-any.whl'
   - name: workspacePath
-    value: 'dbfs:/FileStore/test'
+    value: '/Workspace/Shared/wheels'
 
 stages:
 - stage: Build
@@ -101,27 +101,24 @@ stages:
           FILENAME=$(basename "$WHEEL_FILE")
           echo "Extracted filename: $FILENAME"
   
-          DEST_PATH="dbfs:/Filestore/test/$FILENAME"
+          DEST_PATH="$(workspacePath)/$FILENAME"  # Using workspace path instead of DBFS
           echo "Destination path: $DEST_PATH"
 
-          echo "copying wheel file to DBFS..."
-          echo "copying $WHEEL_FILE to $DEST_PATH"
-          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
-
-          echo "Listing files in $(workspacePath)/"
+          echo "Uploading wheel file to Workspace..."
+          databricks workspace import --format AUTO --language PYTHON "$WHEEL_FILE" "$DEST_PATH"
 
           if [ $? -eq 0 ]; then
-            echo "Wheel file uploaded successfully to $(workspacePath)/"
+            echo "Wheel file uploaded successfully to $DEST_PATH"
             exit 0
           else
-            echo "No wheel files found!"
+            echo "Failed to upload wheel file!"
             exit 1
           fi
         else
           echo "No wheel file found"
           exit 1
         fi
-      displayName: 'Upload Wheel to Databricks DBFS'
+      displayName: 'Upload Wheel to Databricks Workspace'
 
     - script: |
        WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
@@ -130,5 +127,10 @@ stages:
          exit 1
        fi
        echo "Installing wheel: $WHEEL_FILENAME on cluster ID: $(databricksClusterId)"
-       databricks libraries install --cluster-id $(databricksClusterId) --whl "$(workspacePath)/$WHEEL_FILENAME"
+       databricks libraries install --cluster-id $(databricksClusterId) --whl "workspace:$(workspacePath)/$WHEEL_FILENAME"
       displayName: 'Install Wheel on Databricks Cluster'
+
+    - script: |
+        # Restart cluster to ensure library is loaded
+        databricks clusters restart --cluster-id "$(databricksClusterId)"
+      displayName: 'Restart Databricks Cluster'
