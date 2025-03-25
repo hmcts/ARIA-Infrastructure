@@ -91,59 +91,38 @@ stages:
       displayName: 'Configure Databricks CLI'
 
     - script: |
-       set -e
+        set -e 
+
         WHEEL_FILE=$(find '$(Pipeline.Workspace)' -name "*.whl" | head -n 1)
+
         if [ -n "$WHEEL_FILE" ]; then
           echo "Found wheel file: $WHEEL_FILE"
+
           FILENAME=$(basename "$WHEEL_FILE")
-          
-          # Upload to temporary DBFS location
-          databricks fs cp --overwrite "$WHEEL_FILE" "dbfs:/temp_wheels/$FILENAME"
-          
-          # Create a temporary notebook for installation
-          echo '{
-            "content": "%pip install /dbfs/temp_wheels/'$FILENAME'",
-            "path": "/Shared/Temporary_Wheel_Install",
-            "language": "PYTHON",
-            "overwrite": true
-          }' > notebook.json
-          
-          databricks workspace import --format SOURCE --language PYTHON --file notebook.json
-          
-          # Run the notebook on the existing cluster
-          JOB_RUN=$(databricks jobs run-now --json '{
-            "notebook_task": {
-              "notebook_path": "/Shared/Temporary_Wheel_Install"
-            },
-            "existing_cluster_id": "$(databricksClusterId)"
-          }')
-          
-          RUN_ID=$(echo $JOB_RUN | jq -r '.run_id')
-          echo "Installation job started with run_id: $RUN_ID"
-          
-          # Wait for job completion
-          while true; do
-            STATUS=$(databricks runs get --run-id $RUN_ID | jq -r '.state.life_cycle_state')
-            echo "Job status: $STATUS"
-            
-            if [ "$STATUS" = "TERMINATED" ] || [ "$STATUS" = "SKIPPED" ] || [ "$STATUS" = "INTERNAL_ERROR" ]; then
-              RESULT=$(databricks runs get --run-id $RUN_ID | jq -r '.state.result_state')
-              if [ "$RESULT" = "SUCCESS" ]; then
-                echo "Installation successful"
-                exit 0
-              else
-                echo "Installation failed"
-                databricks runs get-output --run-id $RUN_ID
-                exit 1
-               fi
-            fi
-            sleep 5
-          done
+          echo "Extracted filename: $FILENAME"
+  
+          DEST_PATH="$(workspacePath)/$WHEEL_FILENAME"
+          echo "Destination path: $DEST_PATH"
+
+          echo "copying wheel file to DBFS..."
+          echo "copying $WHEEL_FILE to $DEST_PATH"
+          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
+
+          echo "Listing files in $(workspacePath)/"
+
+          if [ $? -eq 0 ]; then
+            echo "Wheel file uploaded successfully to $(workspacePath)/"
+            exit 0
+          else
+            echo "No wheel files found!"
+            exit 1
+          fi
         else
           echo "No wheel file found"
           exit 1
         fi
-      displayName: 'Install Wheel via Notebook Job'
+      displayName: 'Upload Wheel to Databricks DBFS'
+
     - script: |
        WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
        if [ -z "$WHEEL_FILENAME" ]; then
