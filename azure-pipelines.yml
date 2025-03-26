@@ -107,7 +107,7 @@ stages:
             # Upload to DBFS
             DEST_PATH="/dbfs/FileStore/shared_wheels/$(basename $WHEEL_FILE)"
             databricks fs cp "$WHEEL_FILE"  "dbfs:/FileStore/shared_wheels/ARIAFUNCITONS-0.0.1-py3-none-any.whl" --overwrite --debug
-            databricks fs ls /FileStore/shared_wheels/
+            databricks fs ls dbfs:/FileStore/shared_wheels/
 
             # Install on the Databricks cluster
             databricks libraries install --cluster-id $(databricksClusterId) --whl "$DEST_PATH"
