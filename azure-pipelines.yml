@@ -40,7 +40,7 @@ stages:
 
         ls -la $(mainRepositoryName)/Databricks/SharedFunctionsLib/dist
         echo "listing contents of mainRepositoryName:$(mainRepositoryName)"
-        ls -la "$(mainRepositoryName)/
+        ls -la "$(mainRepositoryName)/"
 
       displayName: 'Install Python dependencies & build Python wheel'
 
