@@ -3,4 +3,3 @@ setuptools
 azure-storage-blob
 confluent_kafka
 aiohttp
-azure-eventhubs-spark==2.3.21
