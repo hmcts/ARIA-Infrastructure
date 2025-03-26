@@ -134,8 +134,3 @@ stages:
        echo "Installing wheel: $WHEEL_FILENAME on cluster ID: $(databricksClusterId)"
        databricks libraries install --cluster-id $(databricksClusterId) --whl "$(workspacePath)/$WHEEL_FILENAME"
       displayName: 'Install Wheel on Databricks Cluster'
-
-    - script: |
-        # Restart cluster to ensure library is loaded
-        databricks clusters restart --cluster-id "$(databricksClusterId)"
-      displayName: 'Restart Databricks Cluster'
