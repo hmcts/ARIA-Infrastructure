@@ -152,8 +152,13 @@ stages:
       displayName: 'Install Wheel on Databricks Cluster'
     
     - script: |
+       PYTHON_PACKAGE=$(basename $(find "$(Pipeline.Workspace)" -name "*.txt" | head -n 1))
+       if [ -z "$PYTHON_PACKAGE" ]; then
+         echo "Error: No .txt file found in $(Pipeline.Workspace)"
+         exit 1
+       fi
        echo "Uploading requirements.txt to DBFS..."
-       databricks fs cp "$(Pipeline.Workspace)/requirements.txt" dbfs:/FileStore/dependencies/requirements.txt --recursive --overwrite
+       databricks fs cp "$PYTHON_PACKAGE" dbfs:/FileStore/dependencies/requirements.txt --overwrite
       displayName: 'Upload Python (requirements.txt) packages to DBFS'
     
     - script: |
