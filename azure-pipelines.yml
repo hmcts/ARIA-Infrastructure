@@ -116,13 +116,3 @@ stages:
             exit 1
         fi
       displayName: 'Build and Install Python Wheel to Databricks'
-
-    - script: |
-       WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
-       if [ -z "$WHEEL_FILENAME" ]; then
-         echo "Error: No .whl file found in $(Pipeline.Workspace)"
-         exit 1
-       fi
-       echo "Installing wheel: $WHEEL_FILENAME on cluster ID: $(databricksClusterId)"
-       databricks libraries install --cluster-id $(databricksClusterId) --whl "$(workspacePath)/$WHEEL_FILENAME"
-      displayName: 'Install Wheel on Databricks Cluster'
