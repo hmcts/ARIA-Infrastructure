@@ -1,0 +1,6 @@
+azure-eventhubs
+setuptools
+azure-storage-blob
+confluent_kafka
+aiohttp
+com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.21
