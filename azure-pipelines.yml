@@ -52,7 +52,7 @@ stages:
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.SourcesDirectory)/01-Sandbox/requirements.txt'
-        ArtifactName: 'requirements.txt'
+        ArtifactName: 'pythondependencies'
         publishLocation: 'Container'
       displayName: 'Publish Wheel Artifact'
 
@@ -77,7 +77,7 @@ stages:
       inputs:
         buildType: 'current'
         downloadType: 'single'
-        artifactName: 'requirements.txt'
+        artifactName: 'pythondependencies'
         downloadPath: '$(Pipeline.Workspace)'
       displayName: 'Download Python Libraries Artifact'
     
@@ -151,10 +151,10 @@ stages:
     
     - script: |
        echo "Uploading requirements.txt to DBFS..."
-       databricks fs cp "$(Pipeline.Workspace)/requirements.txt" dbfs:/FileStore/dependencies/requirements.txt --overwrite
+       databricks fs cp "$(Pipeline.Workspace)/requirements.txt" dbfs:/FileStore/dependencies/requirements.txt --recursive --overwrite
       displayName: 'Upload Python (requirements.txt) packages to DBFS'
     
     - script: |
        echo "Installing Python packages on cluster ID: $(databricksClusterId)"
-       pip install -r /dbfs/FileStore/dependencies/requirements.txt      
+       pip install -r dbfs:/FileStore/dependencies/requirements.txt      
       displayName: 'Install Python (requirements.txt) packages'
