@@ -1,4 +1,4 @@
-azure-eventhubs
+azure-eventhub
 setuptools
 azure-storage-blob
 confluent_kafka
