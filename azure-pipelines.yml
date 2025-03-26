@@ -164,6 +164,6 @@ stages:
     
     - script: |
        echo "Installing Python packages on cluster ID: $(databricksClusterId)"
-       pip install -r /FileStore/dependencies/requirements.txt
+       pip install -r dbfs:/FileStore/dependencies/requirements.txt
        echo "Succesfully installed Python packages!"      
       displayName: 'Install Python (requirements.txt) packages'
