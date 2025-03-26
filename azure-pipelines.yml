@@ -92,39 +92,30 @@ stages:
       displayName: 'Configure Databricks CLI'
 
     - script: |
-        set -e 
+        # Clean old .whl files
+        rm -rf $(Pipeline.Workspace)/Databricks/SharedFunctionsLib/dist/*.whl
 
-        WHEEL_FILE=$(find '$(Pipeline.Workspace)' -name "*.whl" | head -n 1)
+        # Build the wheel
+        python -m build --wheel --outdir $(Pipeline.Workspace)/Databricks/SharedFunctionsLib/dist $(Pipeline.Workspace)/Databricks/SharedFunctionsLib
+
+        # Find only lowercase .whl files
+        WHEEL_FILE=$(find '$(Pipeline.Workspace)' -type f -iname "ariafuncitons*.whl" | head -n 1)
 
         if [ -n "$WHEEL_FILE" ]; then
-          echo "Found wheel file: $WHEEL_FILE"
+            echo "Found lowercase wheel file: $WHEEL_FILE"
 
-          FILENAME=$(basename "$WHEEL_FILE")
-          echo "Extracted filename: $FILENAME"
-  
-          DEST_PATH="$(workspacePath)/$WHEEL_FILENAME"
-          echo "Destination path: $DEST_PATH"
+            # Upload to DBFS
+            DEST_PATH="/dbfs/FileStore/shared_wheels/$(basename $WHEEL_FILE)"
+            databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
 
-          echo "copying wheel file to DBFS..."
-          echo "copying $WHEEL_FILE to $DEST_PATH"
-          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
-
-          echo "Listing files in $(workspacePath)/"
-          databricks fs ls $("workspathPath")
-
-          if [ $? -eq 0 ]; then
-            echo "Wheel file uploaded successfully to $(workspacePath)/"
-            exit 0
-          else
-            echo "No wheel files found!"
-            exit 1
-          fi
+            # Install on the Databricks cluster
+            databricks libraries install --cluster-id $(databricksClusterId) --whl "$DEST_PATH"
         else
-          echo "No wheel file found"
-          exit 1
+            echo "No lowercase .whl file found"
+            exit 1
         fi
-      displayName: 'Upload Wheel to Databricks DBFS'
-
+      displayName: 'Build and Install Python Wheel to Databricks'
+      
     - script: |
        WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
        if [ -z "$WHEEL_FILENAME" ]; then
