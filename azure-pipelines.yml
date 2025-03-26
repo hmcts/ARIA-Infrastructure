@@ -159,9 +159,11 @@ stages:
        fi
        echo "Uploading requirements.txt to DBFS..."
        databricks fs cp "$PYTHON_PACKAGE" dbfs:/FileStore/dependencies/requirements.txt --overwrite
+       echo "Successfully uploaded "$PYTHON_PACKAGE" to dbfs:/FileStore/dependencies/requirements.txt"
       displayName: 'Upload Python (requirements.txt) packages to DBFS'
     
     - script: |
        echo "Installing Python packages on cluster ID: $(databricksClusterId)"
-       pip install -r dbfs:/FileStore/dependencies/requirements.txt      
+       pip install -r /FileStore/dependencies/requirements.txt]
+       echo "Succesfully installed Python packages!"      
       displayName: 'Install Python (requirements.txt) packages'
