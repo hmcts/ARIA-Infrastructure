@@ -92,27 +92,47 @@ stages:
       displayName: 'Configure Databricks CLI'
 
     - script: |
-        # Clean old .whl files
-        rm -rf $(Pipeline.Workspace)/Databricks/SharedFunctionsLib/dist/*.whl
+        set -e 
 
-        # Build the wheel
-        python -m build --wheel --outdir $(Pipeline.Workspace)/Databricks/SharedFunctionsLib/dist $(Pipeline.Workspace)/Databricks/SharedFunctionsLib
-
-        # Find only lowercase .whl files
-        WHEEL_FILE=$(find '$(Pipeline.Workspace)' -type f -iname "ariafuncitons*.whl" | head -n 1)
+        WHEEL_FILE=$(find '$(Pipeline.Workspace)' -name "*.whl" | tail -n 1)
 
         if [ -n "$WHEEL_FILE" ]; then
-            echo "Found lowercase wheel file: $WHEEL_FILE"
+          echo "Found wheel file: $WHEEL_FILE"
 
-            # Upload to DBFS
-            DEST_PATH="/dbfs/FileStore/shared_wheels/$(basename $WHEEL_FILE)"
-            databricks fs cp "$WHEEL_FILE"  "dbfs:/FileStore/shared_wheels/ARIAFUNCITONS-0.0.1-py3-none-any.whl" --overwrite --debug
-            databricks fs ls dbfs:/FileStore/shared_wheels/
+          FILENAME=$(basename "$WHEEL_FILE")
+          echo "Extracted filename: $FILENAME"
+  
+          DEST_PATH="/dbfs/FileStore/shared_wheels/ARIAFUNCITONS-0.0.1-py3-none-any.whl"
+          echo "Destination path: $DEST_PATH"
+          databricks fs ls /FileStore/shared_wheels/
 
-            # Install on the Databricks cluster
-            databricks libraries install --cluster-id $(databricksClusterId) --whl "$DEST_PATH"
-        else
-            echo "No lowercase .whl file found"
+          echo "copying wheel file to DBFS..."
+          echo "copying $WHEEL_FILE to $DEST_PATH"
+          databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
+
+          echo "Listing files in $(workspacePath)/"
+          databricks fs ls $("workspathPath")
+
+          if [ $? -eq 0 ]; then
+            echo "Wheel file uploaded successfully to $(workspacePath)/"
+            exit 0
+          else
+            echo "No wheel files found!"
             exit 1
+          fi
+        else
+          echo "No wheel file found"
+          exit 1
         fi
-      displayName: 'Build and Install Python Wheel to Databricks'
+        displayName: 'Upload Wheel to Databricks DBFS'
+
+    - script: |
+       WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
+       if [ -z "$WHEEL_FILENAME" ]; then
+         echo "Error: No .whl file found in $(Pipeline.Workspace)"
+         exit 1
+       fi
+       echo "Installing wheel: $WHEEL_FILENAME on cluster ID: $(databricksClusterId)"
+       databricks libraries install --cluster-id $(databricksClusterId) --whl "$(workspacePath)/$WHEEL_FILENAME"
+      displayName: 'Install Wheel on Databricks Cluster'
+
