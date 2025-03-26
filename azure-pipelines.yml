@@ -152,9 +152,9 @@ stages:
       displayName: 'Install Wheel on Databricks Cluster'
     
     - script: |
-       PYTHON_PACKAGE=$(basename $(find "$(Pipeline.Workspace)" -name "*.txt" | head -n 1))
+       PYTHON_PACKAGE=$(find "$(Pipeline.Workspace)/pythondependencies" -name "*.txt" | head -n 1)
        if [ -z "$PYTHON_PACKAGE" ]; then
-         echo "Error: No .txt file found in $(Pipeline.Workspace)"
+         echo "Error: No .txt file found in $(Pipeline.Workspace)/pythondependencies"
          exit 1
        fi
        echo "Uploading requirements.txt to DBFS..."
