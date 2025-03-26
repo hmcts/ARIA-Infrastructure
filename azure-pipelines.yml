@@ -168,3 +168,9 @@ stages:
         pip install -r requirements.txt
         echo "Succesfully installed Python packages!"
       displayName: 'Install Python (requirements.txt) packages'
+
+    - script: |
+       echo "Backup Installing Kafka and Eventhub"
+       databricks libraries install --cluster-id $(databricksClusterId) --pypi-package azure-eventhub
+       databricks libraries install --cluster-id $(databricksClusterId) --pypi-package confluent-kafka
+      displayName: 'Install Kafka and Eventhub to Cluster'
