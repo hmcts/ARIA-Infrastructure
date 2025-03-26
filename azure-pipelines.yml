@@ -163,9 +163,8 @@ stages:
       displayName: 'Upload Python (requirements.txt) packages to DBFS'
     
     - script: |
+        pip install --upgrade pip
         echo "Installing Python packages on cluster ID: $(databricksClusterId)"
-        databricks fs cp dbfs:/FileStore/dependencies/requirements.txt to file:/tmp/requirements.txt
-        echo "Successfully moved requirements.txt from dbfs:/ to file:/tmp/"
-        pip install -r /tmp/requirements.txt
-        echo "Successfully installed Python packages!"
+        ls -r pip install dbfs:/FileStore/dependencies/requirements.txt
+        echo "Succesfully installed Python packages!" 
       displayName: 'Install Python (requirements.txt) packages'
