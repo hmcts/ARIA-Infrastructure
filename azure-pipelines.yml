@@ -164,7 +164,8 @@ stages:
     
     - script: |
         echo "Installing Python packages on cluster ID: $(databricksClusterId)"
-        dbutils.fs.cp("dbfs:/FileStore/dependencies/requirements.txt", "file:/tmp/requirements.txt", True)
+        databricks fs cp dbfs:/FileStore/dependencies/requirements.txt to file:/tmp/requirements.txt
+        echo "Successfully moved requirements.txt from dbfs:/ to file:/tmp/"
         pip install -r /tmp/requirements.txt
         echo "Successfully installed Python packages!"
       displayName: 'Install Python (requirements.txt) packages'
