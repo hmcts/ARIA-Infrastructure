@@ -102,7 +102,7 @@ stages:
           FILENAME=$(basename "$WHEEL_FILE")
           echo "Extracted filename: $FILENAME"
   
-          DEST_PATH="/dbfs/FileStore/shared_wheels/ARIAFUNCITONS-0.0.1-py3-none-any.whl"
+          DEST_PATH="/dbfs:/FileStore/shared_wheels/ARIAFUNCITONS-0.0.1-py3-none-any.whl"
           echo "Destination path: $DEST_PATH"
 
           echo "copying wheel file to DBFS..."
@@ -110,7 +110,6 @@ stages:
           databricks fs cp "$WHEEL_FILE" "$DEST_PATH" --overwrite --debug
 
           echo "Listing files in $(workspacePath)/"
-          databricks fs ls $("workspathPath")
 
           if [ $? -eq 0 ]; then
             echo "Wheel file uploaded successfully to $(workspacePath)/"
@@ -123,7 +122,7 @@ stages:
           echo "No wheel file found"
           exit 1
         fi
-        displayName: 'Upload Wheel to Databricks DBFS'
+      displayName: 'Upload Wheel to Databricks DBFS'
 
     - script: |
        WHEEL_FILENAME=$(basename $(find "$(Pipeline.Workspace)" -name "*.whl" | head -n 1))
