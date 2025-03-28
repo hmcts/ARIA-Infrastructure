@@ -1,5 +1,9 @@
-azure-eventhub
+azure-event hub
 setuptools
 azure-storage-blob
 confluent_kafka
 aiohttp
+json
+numpy
+logging
+pyspark
