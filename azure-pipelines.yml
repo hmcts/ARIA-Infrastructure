@@ -193,7 +193,7 @@ stages:
           inlineScript: |
             export AZURE_STORAGE_YES_PROMPT=true
             echo "files in HTML templates folder: "
-            echo "ls -la $(Build.SourcesDirectory)/01-Sandbox/HTML_Templates/"
+            ls -la $(Build.SourcesDirectory)/01-Sandbox/HTML_Templates/
 
             echo "Assigning Service Principal Blob Contributor Access"
             az role assignment create \
