@@ -209,7 +209,7 @@ stages:
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --ip-address $AGENT_IP
-            echo "Success! Agent_IP: $AGENT_IP added to network rules for $(Resource_Group)/$(HTML_StorageAccount"
+            echo "Success! Agent_IP: $AGENT_IP added to network rules for $(Resource_Group)/$(HTML_StorageAccount)"
 
             echo "Update $(HTML_StorageAccount) to bypass Firewall"
             az storage account update \
