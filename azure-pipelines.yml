@@ -209,4 +209,5 @@ stages:
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
             --pattern '*' 
+            --auth-mode login
         displayName: 'Copy HTML templates to ADLS'
