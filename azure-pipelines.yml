@@ -14,6 +14,8 @@ variables:
     value: 'ARIAFUNCITONS-0.0.1-py3-none-any.whl'
   - name: workspacePath
     value: 'dbfs:/FileStore/shared_wheels/'
+  - name: HTML_StorageAccount
+    value: 'ingest02landingsbox'
 
 stages:
 - stage: Build
@@ -174,3 +176,22 @@ stages:
        databricks libraries install --cluster-id $(databricksClusterId) --pypi-package azure-eventhub
        databricks libraries install --cluster-id $(databricksClusterId) --pypi-package confluent-kafka
       displayName: 'Install Kafka and Eventhub to Cluster'
+      
+  - job: DeployHTMLtoADLS
+    displayName: 'Deploy HTML to ADLS'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az storage blob upload-batch \
+            --account-name ingest02landingsbox \
+            --destination html-template \
+            --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
+            --pattern '*' \
+            --auth-mode login
+        displayName: 'Copy HTML templates to ADLS'
