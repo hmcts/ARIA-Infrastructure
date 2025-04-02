@@ -240,12 +240,18 @@ stages:
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --query '[0].value' -o tsv)
+
+            # Retrieve blob endpoint
+            blob_endpoint=$(az storage account show \
+            --resource-group $(Resource_Group) \
+            --name $(HTML_StorageAccount) \
+            --query "primaryEndpoints.blob" -o tsv)
         
             az storage container create \
             --account-name $(HTML_StorageAccount) \
-            --account-key $storage_account_key \
             --name html-template \
-            --public-access off
+            --account-key $storage_account_key \
+            --blob-endpoint $blob_endpoint
         displayName: 'Create container (html-template) if does not exist'
 
       - task: AzureCLI@2
