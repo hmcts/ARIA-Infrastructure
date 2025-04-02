@@ -230,6 +230,12 @@ stages:
             --name ingest02landingsbox \
             --resource-group $(Resource_Group) \
             --bypass AzureServices
+          
+            # Create the container if it doesn't exist
+            az storage container create \
+            --account-name $(HTML_StorageAccount) \
+            --name html-template \
+            --public-access off
 
             # Upload HTML templates to blob storage
             az storage blob upload-batch \
