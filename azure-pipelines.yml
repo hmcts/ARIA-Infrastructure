@@ -203,11 +203,17 @@ stages:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
+            storage_account_key=$(az storage account keys list \
+            --resource-group $(Resource_Group) \
+            --account-name $(HTML_StorageAccount) \
+            --query '[0].value' -o tsv)
+
             az upgrade
+
             az storage blob upload-batch \
-            --account-name ingest02landingsbox \
+            --account-name $(HTML_StorageAccount) \
+            --account-key $storage_account_key \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
             --pattern '*' 
-            --auth-mode login
         displayName: 'Copy HTML templates to ADLS'
