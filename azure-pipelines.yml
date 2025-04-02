@@ -203,14 +203,19 @@ stages:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
+            export AZURE_STORAGE_YES_PROMPT=true
+
             storage_account_key=$(az storage account keys list \
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --query '[0].value' -o tsv)
 
-            echo "Test storage key output": $storage_account_key
-
             az upgrade
+
+            az storage account update \
+            --name ingest02landingsbox \
+            --resource-group $(Resource_Group) \
+            --bypass AzureServices
 
             az storage blob upload-batch \
             --account-name $(HTML_StorageAccount) \
