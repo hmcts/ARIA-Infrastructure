@@ -64,7 +64,7 @@ stages:
       displayName: 'Publish Wheel Artifact'
 
 - stage: Deployment
-  displayName: 'Deploy to Databricks'
+  displayName: 'Deployment'
   dependsOn: Build
   jobs:
   - job: DeployToDatabricks
@@ -208,6 +208,8 @@ stages:
             --account-name $(HTML_StorageAccount) \
             --query '[0].value' -o tsv)
 
+            echo "Test storage key output": $storage_account_key
+
             az upgrade
 
             az storage blob upload-batch \
@@ -215,6 +217,5 @@ stages:
             --account-key $storage_account_key \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
-            --pattern '*.html' \
-            --yes \
+            --pattern '*.html' 
         displayName: 'Copy HTML templates to ADLS'
