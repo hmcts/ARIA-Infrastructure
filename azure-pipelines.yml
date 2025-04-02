@@ -192,6 +192,8 @@ stages:
           scriptLocation: 'inlineScript'
           inlineScript: |
             export AZURE_STORAGE_YES_PROMPT=true
+            echo "files in HTML templates folder: "
+            echo "ls -la $(Build.SourcesDirectory)/01-Sandbox/HTML_Templates/"
 
             echo "Assigning Service Principal Blob Contributor Access"
             az role assignment create \
@@ -245,7 +247,7 @@ stages:
             --account-name $(HTML_StorageAccount) \
             --account-key $storage_account_key \
             --destination html-template \
-            --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
+            --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates/' \
             --pattern '*.html'
             echo "Success! HTML templates imported to $(HTML_StorageAccount)/html-template"
         displayName: 'Storage account and storage container configuration'
