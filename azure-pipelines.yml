@@ -63,7 +63,7 @@ stages:
         publishLocation: 'Container'
       displayName: 'Publish Wheel Artifact'
 
-- stage: Deploy
+- stage: Deployment
   displayName: 'Deploy to Databricks'
   dependsOn: Build
   jobs:
@@ -215,7 +215,6 @@ stages:
             --account-key $storage_account_key \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
-            --pattern '*' \
+            --pattern '*.html' \
             --yes \
-            --bypass-network-rules
         displayName: 'Copy HTML templates to ADLS'
