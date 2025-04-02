@@ -228,6 +228,8 @@ stages:
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --query '[0].value' -o tsv)
+
+            echo "##vso[task.setvariable variable=storage_account_key]$storage_account_key"
         displayName: 'Retrieve $(HTML_StorageAccount) storage account key'
 
       - task: AzureCLI@2
