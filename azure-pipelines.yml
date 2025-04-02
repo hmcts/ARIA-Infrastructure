@@ -1,5 +1,6 @@
 variables:
   - group: DatabricksSecrets
+  - group: Secrets
   - name: shouldBuildWheel
     value: 'true'
   - name: mainRepositoryName
@@ -16,6 +17,8 @@ variables:
     value: 'dbfs:/FileStore/shared_wheels/'
   - name: HTML_StorageAccount
     value: 'ingest02landingsbox'
+  - name: Resource_Group
+    value: 'ingest02-main-sbox'
 
 stages:
 - stage: Build
@@ -188,10 +191,22 @@ stages:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
+            az role assignment create \
+            --assignee $(Client_ID) \
+            --role "Storage Blob Data Contributor" \
+            --scope /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)
+        displayName: 'Assigning Service Principal Blob Contributor'
+
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az upgrade
             az storage blob upload-batch \
             --account-name ingest02landingsbox \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
-            --pattern '*' \
-            --auth-mode login
+            --pattern '*' 
         displayName: 'Copy HTML templates to ADLS'
