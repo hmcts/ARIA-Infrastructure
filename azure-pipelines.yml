@@ -217,15 +217,6 @@ stages:
             --account-name $(HTML_StorageAccount) \
             --ip-address $AGENT_IP
         displayName: 'Add IP to Storage account network rules'
-
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: 'DTS-DATAINGEST-SBOX'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            echo 'Display HTML_StorageAccount Name: $(HTML_StorageAccount)'
-        displayName: 'Test StorageAccount Name'
           
       - task: AzureCLI@2
         inputs:
@@ -259,6 +250,7 @@ stages:
           inlineScript: |
             az storage container create \
             --account-name $(HTML_StorageAccount) \
+            --account-key $storage_account_key \
             --name html-template \
             --public-access off
         displayName: 'Create container (html-template) if does not exist'
