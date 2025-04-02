@@ -215,5 +215,7 @@ stages:
             --account-key $storage_account_key \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
-            --pattern '*' 
+            --pattern '*' \
+            --yes \
+            --bypass-network-rules
         displayName: 'Copy HTML templates to ADLS'
