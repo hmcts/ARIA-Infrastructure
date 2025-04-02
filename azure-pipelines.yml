@@ -224,20 +224,6 @@ stages:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            storage_account_key=$(az storage account keys list \
-            --resource-group $(Resource_Group) \
-            --account-name $(HTML_StorageAccount) \
-            --query '[0].value' -o tsv)
-
-            echo "##vso[task.setvariable variable=storage_account_key]$storage_account_key"
-        displayName: 'Retrieve $(HTML_StorageAccount) storage account key'
-
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: 'DTS-DATAINGEST-SBOX'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
             az storage account update \
             --name $(HTML_StorageAccount) \
             --resource-group $(Resource_Group) \
@@ -250,6 +236,11 @@ stages:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
+            storage_account_key=$(az storage account keys list \
+            --resource-group $(Resource_Group) \
+            --account-name $(HTML_StorageAccount) \
+            --query '[0].value' -o tsv)
+        
             az storage container create \
             --account-name $(HTML_StorageAccount) \
             --account-key $storage_account_key \
@@ -263,7 +254,11 @@ stages:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Upload HTML templates to blob storage
+            storage_account_key=$(az storage account keys list \
+            --resource-group $(Resource_Group) \
+            --account-name $(HTML_StorageAccount) \
+            --query '[0].value' -o tsv)
+
             az storage blob upload-batch \
             --account-name $(HTML_StorageAccount) \
             --account-key $storage_account_key \
