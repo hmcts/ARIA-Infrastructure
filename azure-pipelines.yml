@@ -184,93 +184,68 @@ stages:
     displayName: 'Deploy HTML to ADLS'
     pool:
       vmImage: 'ubuntu-latest'
-    steps:
+    steps:     
       - task: AzureCLI@2
         inputs:
           azureSubscription: 'DTS-DATAINGEST-SBOX'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
+            export AZURE_STORAGE_YES_PROMPT=true
+
+            echo "Assigning Service Principal Blob Contributor Access"
             az role assignment create \
             --assignee $(Client_ID) \
             --role "Storage Blob Data Contributor" \
             --scope /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)
-        displayName: 'Assigning Service Principal Blob Contributor'
-
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: 'DTS-DATAINGEST-SBOX'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
+            echo "Success! Service Principal has been assigned Storage Blob Data Contributor for the following scope: /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)"
             
-            # Automatic yes prompt
-            export AZURE_STORAGE_YES_PROMPT=true
-            
-            # Get the agent outbound IP
+            echo "Retreiving AGENT IP"
             AGENT_IP=$(curl -s https://api64.ipify.org)
-            echo "Agent IP: $AGENT_IP"
+            echo "Success! Agent IP: $AGENT_IP"
 
-            # Add agent IP to storage account network rules
+            echo "Add agent IP to storage account network rules"
             az storage account network-rule add \
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --ip-address $AGENT_IP
-        displayName: 'Add IP to Storage account network rules'
-          
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: 'DTS-DATAINGEST-SBOX'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
+            echo "Success! Agent_IP: $AGENT_IP added to network rules for $(Resource_Group)/$(HTML_StorageAccount"
+
+            echo "Update $(HTML_StorageAccount) to bypass Firewall"
             az storage account update \
             --name $(HTML_StorageAccount) \
             --resource-group $(Resource_Group) \
             --bypass AzureServices
-        displayName: 'Update $(HTML_StorageAccount) to bypass Firewall'
-          
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: 'DTS-DATAINGEST-SBOX'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
+            echo "Success! $(HTML_StorageAccount) bypassed the firewall"
+
+            echo "Output  $(HTML_StorageAccount) storage account key"
             storage_account_key=$(az storage account keys list \
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --query '[0].value' -o tsv)
+            echo "Success! $(HTML_StorageAccount) is $storage_account_key"
 
-            # Retrieve blob endpoint
+            echo "Retrieve  $(HTML_StorageAccount) blob endpoint"
             blob_endpoint=$(az storage account show \
             --resource-group $(Resource_Group) \
             --name $(HTML_StorageAccount) \
             --query "primaryEndpoints.blob" -o tsv)
+            echo "Success! $(HTML_StorageAccount) is $blob_endpoint"
         
+            echo "Create storage container html-template  "
             az storage container create \
             --account-name $(HTML_StorageAccount) \
             --name html-template \
             --account-key $storage_account_key \
             --blob-endpoint $blob_endpoint
-        displayName: 'Create container (html-template) if does not exist'
+            echo "Success! html-template container created!"
 
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: 'DTS-DATAINGEST-SBOX'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            storage_account_key=$(az storage account keys list \
-            --resource-group $(Resource_Group) \
-            --account-name $(HTML_StorageAccount) \
-            --query '[0].value' -o tsv)
-
+            echo "Uploading HTML templates to blob storage $(HTML_StorageAccount)/html-template"
             az storage blob upload-batch \
             --account-name $(HTML_StorageAccount) \
             --account-key $storage_account_key \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates' \
-            --pattern '*.html' 
-          
-            echo "Upload completed successfully!"
-        displayName: 'Upload HTML templates to ADLS'
+            --pattern '*.html'
+            echo "Success! HTML templates imported to $(HTML_StorageAccount)/html-template"
+        displayName: 'Storage account and storage container configuration'
