@@ -216,27 +216,59 @@ stages:
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --ip-address $AGENT_IP
+        displayName: 'Add IP to Storage account network rules'
 
-            # Retrieve storage account key
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            echo 'Display HTML_StorageAccount Name: $(HTML_StorageAccount)'
+        displayName: 'Test StorageAccount Name'
+          
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
             storage_account_key=$(az storage account keys list \
             --resource-group $(Resource_Group) \
             --account-name $(HTML_StorageAccount) \
             --query '[0].value' -o tsv)
+        displayName: 'Retrieve $(HTML_StorageAccount) storage account key'
 
-            az upgrade
-
-            # Bypass Azure services restriction
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
             az storage account update \
-            --name ingest02landingsbox \
+            --name $(HTML_StorageAccount) \
             --resource-group $(Resource_Group) \
             --bypass AzureServices
+        displayName: 'Update $(HTML_StorageAccount) to bypass Firewall'
           
-            # Create the container if it doesn't exist
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
             az storage container create \
             --account-name $(HTML_StorageAccount) \
             --name html-template \
             --public-access off
+        displayName: 'Create container (html-template) if does not exist'
 
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'DTS-DATAINGEST-SBOX'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
             # Upload HTML templates to blob storage
             az storage blob upload-batch \
             --account-name $(HTML_StorageAccount) \
@@ -246,4 +278,4 @@ stages:
             --pattern '*.html' 
           
             echo "Upload completed successfully!"
-        displayName: 'Copy HTML templates to ADLS'
+        displayName: 'Upload HTML templates to ADLS'
