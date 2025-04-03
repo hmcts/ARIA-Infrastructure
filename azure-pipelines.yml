@@ -240,7 +240,7 @@ stages:
             --account-key $storage_account_key \
             --destination html-template \
             --source '$(Build.SourcesDirectory)/01-Sandbox/HTML_Templates/' \
-            --pattern '*.html'
+            --pattern '*.html' \
             --overwrite true
             echo "Success! HTML templates imported to $(HTML_StorageAccount)/html-template"
 
