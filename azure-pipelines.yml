@@ -224,13 +224,13 @@ stages:
             echo "Create storage container html-template if it does not exist"
             --account-name $(HTML_StorageAccount) \
             --name html-template \
-            --account-key $storage_account_key || \
+            --account-key $storage_account_key \
+            --query exists -o tsv | grep -q 'true' || \
             az storage container create \
             --account-name $(HTML_StorageAccount) \
             --name html-template \
             --account-key $storage_account_key \
             --blob-endpoint $blob_endpoint \
-            --fail-on-exist false
             echo "Success! html-template container created!"
 
             echo "Uploading HTML templates to blob storage $(HTML_StorageAccount)/html-template"
