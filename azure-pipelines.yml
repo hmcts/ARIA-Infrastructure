@@ -230,7 +230,7 @@ stages:
             --account-name $(HTML_StorageAccount) \
             --name html-template \
             --account-key $storage_account_key \
-            --blob-endpoint $blob_endpoint \
+            --blob-endpoint $blob_endpoint 
             echo "Success! html-template container created!"
 
             echo "Uploading HTML templates to blob storage $(HTML_StorageAccount)/html-template"
