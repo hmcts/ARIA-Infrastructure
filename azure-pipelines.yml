@@ -193,12 +193,12 @@ stages:
           inlineScript: |
             export AZURE_STORAGE_YES_PROMPT=true
 
-            echo "Retain no IP as in ingest00"
-            az storage account update \
-            --name ingest02landingsbox \
-            --resource-group <Resource_Group> \
-            --set "networkRuleSet.ipRules=[]"
-            echo "Success! IP address removed as in ingest00"
+            echo "Querying ingest00landingsbox networkRuleSet"
+            az storage account show -n ingest00landingsbox --query networkRuleSet
+
+            echo "Querying ingest02landingsbox BEFORE networkRuleSet"
+            az storage account show -n ingest02landingsbox --query networkRuleSet
+
 
             echo "Assigning Service Principal Blob Contributor Access"
             az role assignment create \
@@ -206,6 +206,17 @@ stages:
             --role "Storage Blob Data Contributor" \
             --scope /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)
             echo "Success! Service Principal has been assigned Storage Blob Data Contributor for the following scope: /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)"
+
+            echo "Retreiving AGENT IP"
+            AGENT_IP=$(curl -s https://api64.ipify.org)
+            echo "Success! Agent IP: $AGENT_IP"
+
+            echo "Add agent IP to storage account network rules"
+            az storage account network-rule add \
+            --resource-group $(Resource_Group) \
+            --account-name $(HTML_StorageAccount) \
+            --ip-address $AGENT_IP
+            echo "Success! Agent_IP: $AGENT_IP added to network rules for $(Resource_Group)/$(HTML_StorageAccount)"
             
             echo "Update $(HTML_StorageAccount) to bypass Firewall"
             az storage account update \
@@ -213,6 +224,12 @@ stages:
             --resource-group $(Resource_Group) \
             --bypass AzureServices
             echo "Success! $(HTML_StorageAccount) bypassed the firewall"
+
+            echo "Querying ingest00landingsbox networkRuleSet"
+            az storage account show -n ingest00landingsbox --query networkRuleSet
+
+            echo "Querying ingest02landingsbox AFTER networkRuleSet"
+            az storage account show -n ingest02landingsbox --query networkRuleSet
 
             echo "Output  $(HTML_StorageAccount) storage account key"
             storage_account_key=$(az storage account keys list \
