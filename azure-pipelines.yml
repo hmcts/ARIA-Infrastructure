@@ -222,6 +222,7 @@ stages:
             echo "Success! $(HTML_StorageAccount) is $blob_endpoint"
         
             echo "Create storage container html-template if it does not exist"
+            az storage container exists \
             --account-name $(HTML_StorageAccount) \
             --name html-template \
             --account-key $storage_account_key \
