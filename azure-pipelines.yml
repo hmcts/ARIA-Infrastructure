@@ -20,11 +20,6 @@ variables:
   - name: Resource_Group
     value: 'ingest02-main-sbox'
 
-# Use hmcts-sds-pltsbox pool for SBOX
-# Use hmcts-sds-ptl pool for STG/PROD
-pool:
-  name: hmcts-sds-pltsbox 
-
 stages:
 - stage: Build
   displayName: 'Build Wheel Package'
@@ -188,7 +183,9 @@ stages:
   - job: DeployHTMLtoADLS
     displayName: 'Deploy HTML to ADLS'
     pool:
-      vmImage: 'ubuntu-latest'
+    # Use hmcts-sds-pltsbox pool for SBOX
+    # Use hmcts-sds-ptl pool for STG/PROD
+      vmImage: 'hmcts-sds-pltsbox'
     steps:     
       - task: AzureCLI@2
         inputs:
