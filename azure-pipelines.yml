@@ -205,6 +205,22 @@ stages:
             --scope /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)
             echo "Success! Service Principal has been assigned Storage Blob Data Contributor for the following scope: /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)"
 
+            echo "Retreiving AGENT IP and AGENT IP RANGE"
+            AGENT_IP=$(curl -s https://api64.ipify.org)
+
+            AGENT_IP_PREFIX=$(echo $AGENT_IP | cut -d '.' -f 1,2,3)
+            AGENT_IP_RANGE="${AGENT_IP_PREFIX}.0/24"
+
+            echo "Single IP: $AGENT_IP”
+            echo "IP Range: $AGENT_IP_RANGE"
+
+            echo "Add agent IP to storage account network rules"
+            az storage account network-rule add \
+            --resource-group $(Resource_Group) \
+            --account-name $(HTML_StorageAccount) \
+            --ip-address $AGENT_RANGE
+            echo "Success! Agent_IP: $AGENT_RANGE added to network rules for $(Resource_Group)/$(HTML_StorageAccount)”
+            
             echo "Output  $(HTML_StorageAccount) storage account key"
             storage_account_key=$(az storage account keys list \
             --resource-group $(Resource_Group) \
