@@ -20,6 +20,11 @@ variables:
   - name: Resource_Group
     value: 'ingest02-main-sbox'
 
+# Use hmcts-sds-pltsbox pool for SBOX
+# Use hmcts-sds-ptl pool for STG/PROD
+pool:
+  name: hmcts-sds-pltsbox 
+
 stages:
 - stage: Build
   displayName: 'Build Wheel Package'
@@ -200,13 +205,6 @@ stages:
             --scope /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)
             echo "Success! Service Principal has been assigned Storage Blob Data Contributor for the following scope: /subscriptions/$(Subscription_ID)/resourceGroups/$(Resource_Group)/providers/Microsoft.Storage/storageAccounts/$(HTML_StorageAccount)"
 
-            echo "Update $(HTML_StorageAccount) to enable storage account access"
-            az storage account update \
-            --name $(HTML_StorageAccount) \
-            --resource-group $(Resource_Group) \
-            --default-action Allow
-            echo "Success! $(HTML_StorageAccount) access granted!"
-
             echo "Output  $(HTML_StorageAccount) storage account key"
             storage_account_key=$(az storage account keys list \
             --resource-group $(Resource_Group) \
@@ -243,12 +241,5 @@ stages:
             --pattern '*.html' \
             --overwrite true
             echo "Success! HTML templates imported to $(HTML_StorageAccount)/html-template"
-
-            echo "Update $(HTML_StorageAccount) to disable storage account access"
-            az storage account update \
-            --name $(HTML_StorageAccount) \
-            --resource-group $(Resource_Group) \
-            --default-action Deny
-            echo "Success! $(HTML_StorageAccount) access granted!"
 
         displayName: 'Storage account and storage container configuration'
