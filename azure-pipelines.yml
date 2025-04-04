@@ -185,7 +185,7 @@ stages:
     pool:
     # Use hmcts-sds-pltsbox pool for SBOX
     # Use hmcts-sds-ptl pool for STG/PROD
-      vmImage: 'hmcts-sds-ptlsbox'
+      vmImage: hmcts-sds-ptlsbox
     steps:     
       - task: AzureCLI@2
         inputs:
